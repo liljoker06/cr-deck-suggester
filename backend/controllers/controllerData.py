@@ -239,9 +239,13 @@ def update_cards(db):
     print("✅ Mise à jour terminée pour toutes les cartes et évolutions.")
 
 
+# fonction players data 
+
+
 def run_update():
     db = get_database()
     update_arenas(db)
     update_cards(db)
+    
     print("Mise à jour terminée.")
 
