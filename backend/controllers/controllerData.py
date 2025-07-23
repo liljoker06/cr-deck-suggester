@@ -77,9 +77,36 @@ def update_cards(db):
     soup = BeautifulSoup(response.text, "html.parser")
 
     card_collection = db["cards"]
-
     current_category = None
     content = soup.select("h2, h3, table.wikitable")
+
+    # Mappage des en-têtes
+    field_map = {
+        "cost": "elixir_cost",
+        "cost (ability)": "elixir_cost",
+        "cost (+ability)": "elixir_cost",
+        "hitpoints": "hitpoints",
+        "hitpoints (+shield)": "hitpoints",
+        "health": "hitpoints",
+        "damage": "damage",
+        "crown tower damage": "crown_tower_damage",
+        "hit speed": "hit_speed",
+        "hit speed (seconds)": "hit_speed",
+        "damage per second": "dps",
+        "special damage": "special_damage",
+        "range": "range",
+        "radius": "radius",
+        "count": "count",
+        "lifetime": "lifetime",
+        "troop spawned": "troop_spawned",
+        "spawn speed": "spawn_speed",
+        "maximum spawned": "max_spawned",
+        "rarity": "rarity",
+        "type": "type"
+    }
+
+    def normalize(text):
+        return text.strip().lower().replace("\xa0", " ")
 
     for element in content:
         if element.name in ["h2", "h3"]:
@@ -88,23 +115,29 @@ def update_cards(db):
                 current_category = headline.text.strip()
 
         elif element.name == "table":
-            rows = element.find_all("tr")[1:]  # Ignorer l'en-tête
+            headers_raw = element.find_all("th")
+            headers = [normalize(th.text) for th in headers_raw]
+            rows = element.find_all("tr")[1:]
 
             for row in rows:
                 cols = row.find_all("td")
-                if len(cols) < 9:
+                if not cols:
                     continue
 
-                link_tag = cols[0].find("a")
+                link_tag = row.find("a")
                 if not link_tag or not link_tag.get("href"):
                     continue
 
-                name = link_tag.get("title").strip()
+                name = link_tag.text.strip()
                 card_url = BASE_URL + link_tag["href"]
 
-                # Page individuelle de la carte
-                card_page = requests.get(card_url)
-                card_soup = BeautifulSoup(card_page.text, "html.parser")
+                # Page individuelle
+                try:
+                    card_page = requests.get(card_url)
+                    card_soup = BeautifulSoup(card_page.text, "html.parser")
+                except Exception as e:
+                    print(f"❌ Erreur chargement page {name} : {e}")
+                    continue
 
                 # Description
                 description = ""
@@ -114,35 +147,68 @@ def update_cards(db):
                     if desc_p:
                         description = desc_p.text.strip()
 
-                # Image haute qualité
+                # Image
                 image_url = None
                 image_link = card_soup.select_one(".image.image-thumbnail a.image")
                 if image_link and image_link.get("href"):
                     image_url = "https:" + image_link["href"]
 
+                # Données principales
                 card_data = {
                     "name": name,
                     "category": current_category,
-                    "elixir_cost": cols[1].text.strip(),
-                    "hitpoints": cols[2].text.strip(),
-                    "damage": cols[3].text.strip(),
-                    "hit_speed": cols[4].text.strip(),
-                    "dps": cols[5].text.strip(),
-                    "special_damage": cols[6].text.strip(),
-                    "range": cols[7].text.strip(),
-                    "count": cols[8].text.strip(),
                     "description": description,
                     "image": image_url
                 }
 
+                for idx, header in enumerate(headers):
+                    field = field_map.get(header)
+                    if field and idx < len(cols):
+                        value = cols[idx].text.strip()
+                        if value:
+                            card_data[field] = value
+
+                # Insertion ou update par name + category
                 card_collection.update_one(
-                    {"name": name},
+                    {"name": name, "category": current_category},
                     {"$set": card_data},
                     upsert=True
                 )
                 print(f"✅ Carte mise à jour : {name} ({current_category})")
 
-    print("✅ Toutes les cartes ont été mises à jour.")
+    print("📥 Mise à jour des évolutions...")
+
+    # Scraping table des évolutions
+    evolution_table = soup.select_one("table.wikitable:has(th:contains('Cycles'))")
+    if evolution_table:
+        rows = evolution_table.find_all("tr")[1:]
+        for row in rows:
+            cols = row.find_all("td")
+            if len(cols) < 5:
+                continue
+
+            name_tag = cols[0].find("a")
+            if not name_tag:
+                continue
+
+            name = name_tag.text.strip()
+            evolution_data = {
+                "elixir_cost": cols[1].text.strip(),
+                "cycles": cols[2].text.strip(),
+                "overall_cost": cols[3].text.strip(),
+                "stat_boost": cols[4].text.strip().replace("\n", " ")
+            }
+
+            result = card_collection.update_one(
+                {"name": name},
+                {"$set": {"evolution": evolution_data}}
+            )
+            if result.matched_count:
+                print(f"🧬 Évolution ajoutée à {name}")
+            else:
+                print(f"⚠️ Évolution non associée (carte non trouvée) : {name}")
+
+    print("✅ Mise à jour terminée pour toutes les cartes et évolutions.")
 
 def run_update():
     db = get_database()
