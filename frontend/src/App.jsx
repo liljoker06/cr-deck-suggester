@@ -5,13 +5,20 @@ import {Route, Routes} from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import CardCR from './pages/CardCR.jsx';
 
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
+
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/card" element={<CardCR />} />
-    </Routes>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/card" element={<CardCR />} />
+      </Routes>
+      <Footer />
+    </>
   )
 }
 
