@@ -23,8 +23,7 @@ def update_arenas(db):
             if not td:
                 continue
 
-            # Image
-            img_tag = None
+            
             a_tag = td.find("a", class_="image")
             if a_tag:
                 image_url = a_tag.get("href")
@@ -67,6 +66,29 @@ def update_arenas(db):
 
     print("Arènes mises à jour.")
 
+
+
+def get_card_images(card_name: str) -> dict:
+    def fetch_image_from_url(url):
+        try:
+            res = requests.get(url)
+            if res.status_code != 200:
+                return None
+            soup = BeautifulSoup(res.text, "html.parser")
+            a_tag = soup.select_one('figure.pi-item.pi-image a.image-thumbnail')
+            if a_tag and a_tag.get("href"):
+                return a_tag["href"]
+        except Exception as e:
+            print(f"⚠️ Erreur récupération image depuis {url} : {e}")
+        return None
+
+    base_url = f"{BASE_URL}/wiki/{card_name.replace(' ', '_')}"
+    evolution_url = f"{base_url}/Evolution"
+
+    return {
+        "base_image": fetch_image_from_url(base_url),
+        "evolution_image": fetch_image_from_url(evolution_url)
+    }
 
 
 def update_cards(db):
@@ -131,7 +153,7 @@ def update_cards(db):
                 name = link_tag.text.strip()
                 card_url = BASE_URL + link_tag["href"]
 
-                # Page individuelle
+                # Charger la page individuelle
                 try:
                     card_page = requests.get(card_url)
                     card_soup = BeautifulSoup(card_page.text, "html.parser")
@@ -147,20 +169,26 @@ def update_cards(db):
                     if desc_p:
                         description = desc_p.text.strip()
 
-                # Image
-                image_url = None
-                image_link = card_soup.select_one(".image.image-thumbnail a.image")
-                if image_link and image_link.get("href"):
-                    image_url = "https:" + image_link["href"]
-
-                # Données principales
+                # Structure initiale
                 card_data = {
                     "name": name,
                     "category": current_category,
-                    "description": description,
-                    "image": image_url
+                    "description": description
                 }
 
+                # Images
+                image_url = get_card_images(name)
+
+                card_data["image"] = image_url.get("base_image")
+                if not card_data["image"]:
+                    print(f"⚠️ Image non trouvée pour {name}, utilisation de l'URL de la carte.")
+                    card_data["image"] = card_url
+
+                card_data["evolution_image"] = image_url.get("evolution_image")
+                if not card_data["evolution_image"]:
+                    print(f"⚠️ Image d'évolution non trouvée pour {name}, aucune évolution associée.")
+
+                # Extraction des colonnes
                 for idx, header in enumerate(headers):
                     field = field_map.get(header)
                     if field and idx < len(cols):
@@ -168,7 +196,7 @@ def update_cards(db):
                         if value:
                             card_data[field] = value
 
-                # Insertion ou update par name + category
+                # Insertion / update MongoDB
                 card_collection.update_one(
                     {"name": name, "category": current_category},
                     {"$set": card_data},
@@ -178,7 +206,7 @@ def update_cards(db):
 
     print("📥 Mise à jour des évolutions...")
 
-    # Scraping table des évolutions
+    # Table des évolutions (Cycles)
     evolution_table = soup.select_one("table.wikitable:has(th:contains('Cycles'))")
     if evolution_table:
         rows = evolution_table.find_all("tr")[1:]
@@ -209,6 +237,7 @@ def update_cards(db):
                 print(f"⚠️ Évolution non associée (carte non trouvée) : {name}")
 
     print("✅ Mise à jour terminée pour toutes les cartes et évolutions.")
+
 
 def run_update():
     db = get_database()
