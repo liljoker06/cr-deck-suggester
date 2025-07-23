@@ -3,4 +3,3 @@ uvicorn
 pymongo
 requests
 beautifulsoup4
-playwright

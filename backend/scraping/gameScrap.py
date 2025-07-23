@@ -1,41 +1,34 @@
-import asyncio
-from playwright.async_api import async_playwright
+import requests
 import json
 import os
 
-async def run():
-    # 🧭 Chemins à adapter
-    brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-    user_data_dir = r"C:\Users\joker\AppData\Local\BraveSoftware\Brave-Browser\User Data"
+#Crée le dossier "replays" si besoin
+os.makedirs("replays", exist_ok=True)
 
-    async with async_playwright() as p:
-        # 💡 Lance Brave AVEC ton profil utilisateur
-        browser = await p.chromium.launch_persistent_context(
-            user_data_dir=user_data_dir,
-            executable_path=brave_path,
-            headless=False,
-            args=["--disable-blink-features=AutomationControlled"]
-        )
+# URL de l'API RoyaleAPI
+url = "https://royaleapi.com/data/replay?tag=00GPQ2VCUR0L&team_tags=U2LYQJQVY&opponent_tags=P8LRG9UP&team_crowns=1&opponent_crowns=0&referrer_path=https://royaleapi.com/player/U2LYQJQVY/battles"
 
-        page = await browser.new_page()
+# Headers copiés depuis le navigateur f12 network (adapte les cookies si besoin)
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "Referer": "https://royaleapi.com/player/U2LYQJQVY/battles",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Language": "fr-FR,fr;q=0.7",
+    "X-Requested-With": "XMLHttpRequest",
+    "Cookie": "__royaleapi_session_v2=f042666c90364d2984f951a8112ad809; NB_SRVID=srv2086659299; cf_clearance=pd.uBDkQ5c8.4A2uEXOX9Ak9lO8LYlEssy_T26UjZag-1753309437-1.2.1.1-CCuu4wnJhYJmGlR.UvgmSSjAqgdZwvjVZEfUnr.pCn0qKBxevu1uuNFytRG7iXTCeisuWHtWeg4ftHkX.ij4Q4SN8EmGd.IhomFmD1OEwKn2WQZJX1h_ibJGVkZ7p8dquOazVrtOHpoFkJPpxyXSHTuH35BrtkXpX7SEjra1bhLv1d_Ry7lH4YKYarQhARsheL0WBLJTcn3zHUFbwoEZcOiZb5xs_19hSZqYx7DO.oE"
+}
 
-        async def handle_response(response):
-            if "/data/replay" in response.url and response.status == 200:
-                try:
-                    data = await response.json()
-                    print("✅ JSON intercepté !")
-                    with open("replay_data.json", "w", encoding="utf-8") as f:
-                        json.dump(data, f, indent=2, ensure_ascii=False)
-                except Exception as e:
-                    print("⚠️ Erreur lors de la lecture du JSON :", e)
+# 📥 Requête
+response = requests.get(url, headers=headers)
 
-        page.on("response", handle_response)
-
-        print("🟢 Brave est lancé AVEC ton compte connecté.")
-        print("➡️ Va sur une page de replay pour déclencher le JSON.")
-        await page.goto("https://royaleapi.com/player/U2LYQJQVY/battles")
-        await page.wait_for_timeout(120000)  # 2 min pour interagir
-
-        await browser.close()
-
-asyncio.run(run())
+# 📤 Analyse de la réponse
+if response.status_code == 200:
+    try:
+        data = response.json()
+        with open("replays/replay_00GPQ2VCUR0L.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        print("✅ JSON sauvegardé dans replays/replay_00GPQ2VCUR0L.json")
+    except Exception as e:
+        print("⚠️ Erreur de parsing JSON :", e)
+else:
+    print(f"❌ Erreur HTTP {response.status_code}")
