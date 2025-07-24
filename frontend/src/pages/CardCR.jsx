@@ -148,19 +148,17 @@ export default function CardCR() {
               className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4 hover:bg-white/20 transition-all duration-200 transform hover:scale-105"
             >
               {/* Image de la carte */}
-              <div className="aspect-square bg-gray-800 rounded-lg mb-3 flex items-center justify-center">
-                {card.icon_url ? (
+              <div className="aspect-square rounded-lg mb-3 flex items-center justify-center">
+                {card.className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-800" ? (
                   <img
-                    src={card.icon_url}
+                    src={card.image}
                     alt={card.name}
-                    className="w-16 h-16 object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
-                    }}
+                    className="w-64 h-64 object-contain"
+                    referrerPolicy="no-referrer"
+                    onError={() => console.log("Image échouée")}
                   />
                 ) : null}
-                <div className="text-4xl" style={{ display: card.icon_url ? 'none' : 'block' }}>
+                <div className="text-4xl" style={{ display: card.className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-800" ? 'none' : 'block' }}>
                   {card.category === 'Troop' ? '👥' : 
                    card.category === 'Spell' ? '⚡' : 
                    card.category === 'Building' ? '🏰' : '🃏'}
@@ -174,17 +172,7 @@ export default function CardCR() {
                 </h3>
                 
                 <div className="flex justify-between items-center text-xs mb-2">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    card.rarity === 'Common' ? 'bg-gray-600 text-white' :
-                    card.rarity === 'Rare' ? 'bg-blue-600 text-white' :
-                    card.rarity === 'Epic' ? 'bg-purple-600 text-white' :
-                    card.rarity === 'Legendary' ? 'bg-yellow-600 text-black' :
-                    card.rarity === 'Champion' ? 'bg-red-600 text-white' :
-                    'bg-gray-500 text-white'
-                  }`}>
-                    {card.rarity || 'N/A'}
-                  </span>
-                  
+                 
                   {card.elixir_cost && (
                     <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
                       {card.elixir_cost} ⚡

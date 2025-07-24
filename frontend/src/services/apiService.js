@@ -33,8 +33,11 @@ class ApiService {
   // Cartes
   async getAllCards(filters = {}) {
     const params = new URLSearchParams();
+    
+    // Filtres simplifiés
     if (filters.category) params.append('category', filters.category);
-    if (filters.rarity) params.append('rarity', filters.rarity);
+    if (filters.elixir_cost) params.append('elixir_cost', filters.elixir_cost);
+    if (filters.has_evolution) params.append('has_evolution', filters.has_evolution);
     if (filters.limit) params.append('limit', filters.limit);
 
     const queryString = params.toString();

@@ -98,20 +98,18 @@ export default function Arenas() {
 
               {/* Image de l'arène */}
               <div className="aspect-video bg-gray-800 rounded-lg mb-4 flex items-center justify-center">
-                {arena.image_url ? (
+                {arena.image ? (
                   <img
-                    src={arena.image_url}
+                    src={arena.image}
                     alt={arena.name}
-                    className="w-full h-full object-cover rounded-lg"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
+                    referrerPolicy="no-referrer"
+                    onError={() => console.log("Image échouée")}
+                    className="w-full h-full object-contain"
                   />
                 ) : null}
                 <div 
                   className="text-6xl text-gray-600" 
-                  style={{ display: arena.image_url ? 'none' : 'flex' }}
+                  style={{ display: arena.image ? 'none' : 'flex' }}
                 >
                   🏛️
                 </div>

@@ -36,7 +36,7 @@ export default function Navbar() {
 
           {/* Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            {/* Arènes */}
+            {/* Arènes avec dropdown */}
             <div className="relative group">
               <button className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
                 Arènes
@@ -59,12 +59,15 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Autre lien */}
-            <a href="/arena" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              Arènes
-            </a>
+            {/* Liens principaux */}
             <a href="/cartes" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Cartes
+            </a>
+            {/* <a href="/decks" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Decks
+            </a> */}
+            <a href="/creer-deck" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105">
+              🏗️ Créer un Deck
             </a>
           </div>
 
@@ -134,14 +137,17 @@ export default function Navbar() {
             </form>
 
             {/* Liens */}
-            <a href="/decks" className="text-gray-300 hover:text-yellow-400 block px-3 py-2 rounded-md text-base font-medium">
-              Decks
+            <a href="/arenas" className="text-gray-300 hover:text-yellow-400 block px-3 py-2 rounded-md text-base font-medium">
+              Arènes
             </a>
             <a href="/cartes" className="text-gray-300 hover:text-yellow-400 block px-3 py-2 rounded-md text-base font-medium">
               Cartes
             </a>
-            <a href="/leaderboard" className="text-gray-300 hover:text-yellow-400 block px-3 py-2 rounded-md text-base font-medium">
-              Leaderboard
+            {/* <a href="/decks" className="text-gray-300 hover:text-yellow-400 block px-3 py-2 rounded-md text-base font-medium">
+              Decks
+            </a> */}
+            <a href="/creer-deck" className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black block px-3 py-2 rounded-md text-base font-medium transition-all duration-200">
+              🏗️ Créer un Deck
             </a>
             
             {/* Arènes */}
