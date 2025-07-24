@@ -16,4 +16,5 @@ dist/
 *.so
 
 # ignore le dossier brave-profile-playwright
-scraping/brave-profile-playwright/
+scraping/replays/
+scraping/game_parsed/
