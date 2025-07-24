@@ -99,7 +99,7 @@ def get_card_images(card_name: str) -> dict:
     }
 
 
-def update_cards(db):
+async def update_cards(db):
     print("🔄 Mise à jour des cartes...")
 
     url = f"{BASE_URL}/wiki/Cards"
@@ -205,7 +205,7 @@ def update_cards(db):
                             card_data[field] = value
 
                 # Insertion / update MongoDB
-                card_collection.update_one(
+                await card_collection.update_one(
                     {"name": name, "category": current_category},
                     {"$set": card_data},
                     upsert=True
@@ -235,7 +235,7 @@ def update_cards(db):
                 "stat_boost": cols[4].text.strip().replace("\n", " ")
             }
 
-            result = card_collection.update_one(
+            result = await card_collection.update_one(
                 {"name": name},
                 {"$set": {"evolution": evolution_data}}
             )
@@ -329,20 +329,18 @@ def parse_players_from_json(data: List[dict]) -> List[Player]:
 
     return players
 
-def insert_players(db, data):
-
+async def insert_players(db, data):
     player_collection = db["players"]
-
     players = parse_players_from_json(data)
 
+    inserted_count = 0  # compteur réel
+
     for player in players:
-        # On vérifie si le joueur existe déjà via son tag
-        exists = player_collection.find_one({"player_tag": player.player_tag})
+        exists = await player_collection.find_one({"player_tag": player.player_tag})
         if exists:
             print(f"⚠️ Joueur {player.name} déjà présent. Ignoré.")
             continue
 
-        
         player_dict = {
             "name": player.name,
             "player_tag": player.player_tag,
@@ -353,23 +351,25 @@ def insert_players(db, data):
             "pays": player.pays
         }
 
-        player_collection.update_one(
+        await player_collection.update_one(
             {"player_tag": player.player_tag},
             {"$set": player_dict},
             upsert=True
         )
+        inserted_count += 1  # incrémentation réelle
 
-    print(f"✅ {len(players)} joueurs insérés avec succès.")
+    print(f"✅ {inserted_count} nouveaux joueurs insérés.")
 
 
 
-def run_update():
+
+async def run_update():
     db = get_database()
-    update_arenas(db)
-    update_cards(db)
-    scrape_players()
+    update_arenas(db)  
+    await update_cards(db)
+    scrape_players()  
     data = get_data_json()
     if data:
-        insert_players(db, data)
+        await insert_players(db, data)  
     print("Mise à jour terminée.")
 

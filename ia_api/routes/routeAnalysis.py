@@ -1,16 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
+from typing import List
 from controllers.controllerAnalysis import analyze_deck
-from services.cache import cached_matches, cached_cards
 
 router = APIRouter()
 
 class DeckRequest(BaseModel):
-    deck: list[str]
+    deck: List[str]
 
 @router.post("/analyze")
-def analyze_deck_route(data: DeckRequest):
-    if not cached_matches or not cached_cards:
-        raise HTTPException(status_code=503, detail="Les données ne sont pas encore chargées depuis le backend.")
-    result = analyze_deck(data.deck, cached_matches, cached_cards)
-    return result
+async def analyze_deck_route(data: DeckRequest, request: Request):
+    db = request.app.state.db
+    try:
+        result = await analyze_deck(data.deck, db)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

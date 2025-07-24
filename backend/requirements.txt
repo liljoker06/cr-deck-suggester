@@ -5,4 +5,5 @@ requests
 beautifulsoup4
 pandas
 httpx
- 
+motor
+python-dotenv
