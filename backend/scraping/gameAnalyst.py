@@ -1,7 +1,12 @@
 import os
+import sys
+# Ajoute le dossier parent au chemin pour importer le module database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs
+from database import get_database
+
 
 ### CONVERTISSEUR DE TEMPS EN MINUTES ET SECONDES 
 def convert_tick_to_time(tick):
@@ -179,9 +184,12 @@ output_data = {
     "duration": end_time
 }
 
-# Sauvegarde
-output_path = os.path.join(OUTPUT_DIR, f"{match_id}.json")
-with open(output_path, "w", encoding="utf-8") as f:
-    json.dump(output_data, f, ensure_ascii=False, indent=2)
+db = get_database()
+matches_collection = db["matches"]
 
-print(f"✅ Match analysé avec succès et sauvegardé dans '{output_path}'")
+# Vérifie si le match existe déjà (pour éviter les doublons)
+if not matches_collection.find_one({"match_id": output_data["match_id"]}):
+    matches_collection.insert_one(output_data)
+    print(f"✅ Match {output_data['match_id']} analysé et inséré en base MongoDB.")
+else:
+    print(f"⚠️ Match {output_data['match_id']} déjà présent dans la base.")
