@@ -15,7 +15,7 @@ headers = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
     "Accept-Language": "fr-FR,fr;q=0.7",
     "X-Requested-With": "XMLHttpRequest",
-    "Cookie": "__royaleapi_session_v2=f042666c90364d2984f951a8112ad809; NB_SRVID=srv2086659299; cf_clearance=pd.uBDkQ5c8.4A2uEXOX9Ak9lO8LYlEssy_T26UjZag-1753309437-1.2.1.1-CCuu4wnJhYJmGlR.UvgmSSjAqgdZwvjVZEfUnr.pCn0qKBxevu1uuNFytRG7iXTCeisuWHtWeg4ftHkX.ij4Q4SN8EmGd.IhomFmD1OEwKn2WQZJX1h_ibJGVkZ7p8dquOazVrtOHpoFkJPpxyXSHTuH35BrtkXpX7SEjra1bhLv1d_Ry7lH4YKYarQhARsheL0WBLJTcn3zHUFbwoEZcOiZb5xs_19hSZqYx7DO.oE"
+    "Cookie": "__royaleapi_session_v2=76fea327c6924735a3ef820da0b03869; NB_SRVID=srv743175; cf_clearance=5p0fAonKaYipdqZEnqm3dVXv7.dOO7IABADmB9tGYAE-1753340508-1.2.1.1-X37ax5Yhj9z3JtEOpTpRU9SRyv2EA7kkucdhrTC.2UB7Wrx07ICIL2DzSh.rhn2w3pNED1.dE9AGMV.T95qBby6zllRfqYjrWKXdBXj6WmUcxfZiippxZ9YpBsjCTJloVVnhu4isQx9ct_fyxDNlgqG6oQ5KEU2_Hk1lOnc_F47azZNGMrss8qkjOO_wdlmQ9q.aSdplSzroMEJaHNzc6nPgKR72t1EawOkniglqO4U"
 }
 
 # Requête
