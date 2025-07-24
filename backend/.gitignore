@@ -14,3 +14,7 @@ dist/
 *.log
 # Ignore compiled files
 *.so
+
+# ignore le dossier brave-profile-playwright
+scraping/replays/
+scraping/games_parsed/
