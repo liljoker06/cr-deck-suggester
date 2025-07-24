@@ -27,7 +27,7 @@ export default function ArenaDetail() {
           <h2 className="text-white text-2xl mb-2">Erreur de chargement</h2>
           <p className="text-gray-300">{error}</p>
           <button 
-            onClick={() => navigate('/arenes')}
+            onClick={() => navigate('/arenas')}
             className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
             Retour aux arènes
@@ -48,7 +48,7 @@ export default function ArenaDetail() {
           <h2 className="text-white text-2xl mb-2">Arène non trouvée</h2>
           <p className="text-gray-300">L'arène #{arenaNumber} n'existe pas</p>
           <button 
-            onClick={() => navigate('/arenes')}
+            onClick={() => navigate('/arenas')}
             className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
             Retour aux arènes
@@ -64,7 +64,7 @@ export default function ArenaDetail() {
       <div className="pt-20 pb-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <button 
-            onClick={() => navigate('/arenes')}
+            onClick={() => navigate('/arenas')}
             className="flex items-center text-yellow-400 hover:text-yellow-300 transition-colors mb-6"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

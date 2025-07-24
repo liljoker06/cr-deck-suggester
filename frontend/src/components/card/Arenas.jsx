@@ -41,11 +41,9 @@ export default function Arenas({ arena }) {
             <img
               src={arena.image}
               alt={arena.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
+              referrerPolicy="no-referrer"
+              onError={() => console.log("Image échouée")}
+              className="w-full h-full object-contain"
             />
           ) : null}
           <div 
