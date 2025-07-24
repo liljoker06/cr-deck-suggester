@@ -17,4 +17,4 @@ dist/
 
 # ignore le dossier brave-profile-playwright
 scraping/replays/
-scraping/game_parsed/
+scraping/games_parsed/
