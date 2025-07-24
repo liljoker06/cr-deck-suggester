@@ -1,6 +1,11 @@
 import React from 'react'
+import { useGlobalStats } from '../hooks/useApi'
+import DataDebugPanel from '../components/debug/DataDebugPanel'
+import { showDebugPanel } from '../config'
 
 export default function Home() {
+  const { stats, loading, error, refetch } = useGlobalStats();
+
   return (
     <>
       {/* Hero Section avec thème Clash Royale */}
@@ -27,7 +32,7 @@ export default function Home() {
           <div className="hidden sm:mb-8 sm:flex sm:justify-center">
             <div className="relative rounded-full px-4 py-2 text-sm text-yellow-300 ring-2 ring-yellow-400/30 hover:ring-yellow-400/50 bg-yellow-400/10 backdrop-blur-sm transition-all">
               🏆 Nouvelle saison disponible !{' '}
-              <a href="/arenas" className="font-semibold text-yellow-400 hover:text-yellow-300">
+              <a href="#" className="font-semibold text-yellow-400 hover:text-yellow-300">
                 <span aria-hidden="true" className="absolute inset-0" />
                 Découvrir <span aria-hidden="true">⚔️</span>
               </a>
@@ -37,9 +42,9 @@ export default function Home() {
           {/* Titre principal */}
           <div className="text-center">
             <h1 className="text-6xl font-bold tracking-tight text-white sm:text-8xl drop-shadow-2xl">
-              CR Deck
+              Mousieur 
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                {' '}Suggester
+                {' '}DeckSVP
               </span>
             </h1>
             <p className="mt-8 text-xl font-medium text-gray-200 sm:text-2xl max-w-3xl mx-auto leading-relaxed">
@@ -68,15 +73,21 @@ export default function Home() {
             {/* Stats rapides */}
             <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
               <div className="text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                <div className="text-3xl font-bold text-yellow-400">107</div>
+                <div className="text-3xl font-bold text-yellow-400">
+                  {loading ? '...' : error ? '0' : stats?.totals?.cards || '0'}
+                </div>
                 <div className="text-sm text-gray-300 mt-1">Cartes disponibles</div>
               </div>
               <div className="text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                <div className="text-3xl font-bold text-yellow-400">17</div>
+                <div className="text-3xl font-bold text-yellow-400">
+                  {loading ? '...' : error ? '0' : stats?.totals?.arenas || '0'}
+                </div>
                 <div className="text-sm text-gray-300 mt-1">Arènes différentes</div>
               </div>
               <div className="text-center p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                <div className="text-3xl font-bold text-yellow-400">∞</div>
+                <div className="text-3xl font-bold text-yellow-400">
+                  {loading ? '...' : '∞'}
+                </div>
                 <div className="text-sm text-gray-300 mt-1">Combos possibles</div>
               </div>
             </div>
@@ -103,7 +114,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Pourquoi choisir <span className="text-yellow-400">CR Deck Suggester</span> ?
+              Pourquoi choisir <span className="text-yellow-400">MousieurDeckSVP </span> ?
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-300">
               Les outils les plus avancés pour analyser et optimiser vos stratégies Clash Royale
@@ -153,6 +164,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Panel de debug pour le développement */}
+      {showDebugPanel && <DataDebugPanel />}
     </>
   )
 }

@@ -1,13 +1,18 @@
 import React, { useState } from 'react'
+import { useGlobalStats, useArenas } from '../hooks/useApi';
 
 export default function Navbar() {
+  const { stats, loading, error } = useGlobalStats();
+  const { arenas, loading: arenasLoading, error: arenasError } = useArenas();
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const arenes = [
-    { name: 'Camp d\'entrainement', path: '/arena/training-camp' },
-    
-  ]
+  const arenes = arenas.map(arena => ({
+    name: `${arena.name} (Arena ${arena.number})`,
+    path: `/arena/${arena.number}`,
+    number: arena.number,
+    minTrophies: arena.min_trophies
+  })).sort((a, b) => a.number - b.number)
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -25,7 +30,7 @@ export default function Navbar() {
           <div className="flex-shrink-0 flex items-center">
             <a href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <img src="/CR-Logo.png" alt="Clash Royale Logo" className="h-10 w-auto" />
-              <span className="text-xl font-bold text-yellow-400 hidden sm:block">Clash Royale</span>
+              <span className="text-xl font-bold text-yellow-400 hidden sm:block">Mousieur DeckSVP</span>
             </a>
           </div>
 
@@ -55,8 +60,8 @@ export default function Navbar() {
             </div>
 
             {/* Autre lien */}
-            <a href="/decks" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              Decks
+            <a href="/arena" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Arènes
             </a>
             <a href="/cartes" className="text-white hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Cartes
