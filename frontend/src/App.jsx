@@ -4,6 +4,9 @@ import {Route, Routes} from 'react-router-dom';
 /// import pages
 import Home from './pages/Home.jsx';
 import CardCR from './pages/CardCR.jsx';
+import Arenas from './pages/Arenas.jsx';
+import ArenaDetail from './pages/ArenaDetail.jsx';
+import Decks from './pages/Decks.jsx';
 
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
@@ -15,7 +18,11 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/card" element={<CardCR />} />
+        <Route path="/cards" element={<CardCR />} />
+        <Route path="/cartes" element={<CardCR />} />
+        <Route path="/arena" element={<Arenas />} />
+        <Route path="/arena/:arenaNumber" element={<ArenaDetail />} />
+        <Route path="/decks" element={<Decks />} />
       </Routes>
       <Footer />
     </>

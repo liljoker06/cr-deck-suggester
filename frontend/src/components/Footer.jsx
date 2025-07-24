@@ -9,7 +9,7 @@ export default function Footer() {
             <a class="block md:mx-auto mb-5 max-w-max" href="#">
               <a className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <img src="/CR-Logo.png" alt="Clash Royale Logo" className="h-10 w-auto" />
-                <span className="text-xl font-bold text-yellow-400 hidden sm:block">Clash Royale</span>
+                <span className="text-xl font-bold text-yellow-400 hidden sm:block">Mousieur DeckSVP</span>
               </a>
             </a>
             <div class="flex flex-wrap justify-center -mx-3 lg:-mx-6">
@@ -51,7 +51,7 @@ export default function Footer() {
         <div class="border-b border-gray-700"></div>
         <div class="container px-4 mx-auto">
           <p class="py-4 md:pb-6 text-md text-gray-300 font-medium text-center">
-            © 2025 CRSuggests.com. Tout droit réservé.
+            © 2025 MousieurDeckSVP.com. Tout droit réservé.
           </p>
         </div>
       </footer>
