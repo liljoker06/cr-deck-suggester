@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from controllers.controllerArenas import ArenasController
-# from controllers.controllerCards import CardsController
+from controllers.controllerCard import get_all_cards
 from controllers.controllerPlayers import PlayersController
 from database import get_database
 import logging
@@ -9,7 +9,7 @@ router = APIRouter()
 
 # Initialisation des controllers
 arenas_controller = ArenasController()
-# cards_controller = CardsController()
+cards_controller = get_all_cards()
 players_controller = PlayersController()
 
 @router.get("/stats")
@@ -19,7 +19,8 @@ async def get_global_stats():
     """
     try:
         # Utilisation des controllers pour récupérer les statistiques
-        # cards_count = cards_controller.get_cards_count()
+        cards_count = cards_controller
+        total_cards = len(cards_count)
         arenas_count = arenas_controller.get_arenas_count()
         players_count = players_controller.get_players_count()
         
@@ -38,7 +39,7 @@ async def get_global_stats():
         
         return {
             "totals": {
-                # "cards": cards_count,
+                "cards": total_cards,
                 "arenas": arenas_count,
                 "players": players_count,
                 "decks": decks_count
