@@ -1,6 +1,4 @@
 import os
-import time
-import random
 import requests
 import pandas as pd
 from io import StringIO
@@ -8,24 +6,12 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 
 load_dotenv()
-
+ 
 def get_database():
     MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
     client = MongoClient(MONGO_URL)
     return client["clash_decks"]
-
-def fetch_and_store_battles_for_all_players(limit=2):
-    db = get_database()
-    players = db["players"].find({}, {"player_tag": 1}).limit(limit)
-
-    for player in players:
-        player_tag = player.get("player_tag")
-        if player_tag:
-            fetch_and_store_battles(player_tag)
-            delay = random.uniform(30, 90)  # entre 30s et 90s
-            print(f"Pause de {delay:.1f} secondes avant le prochain joueur...")
-            time.sleep(delay)
-
+ 
 def fetch_and_store_battles(player_tag: str):
     url = f"https://royaleapi.com/player/{player_tag}/battles/csv"
     headers = {
@@ -36,13 +22,13 @@ def fetch_and_store_battles(player_tag: str):
         "X-Requested-With": "XMLHttpRequest",
         "Cookie": os.getenv("ROYALEAPI_COOKIE", "")
     }
-
+ 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         print(f"❌ Erreur lors du téléchargement du CSV pour {player_tag} : {response.status_code}")
         print(response.text[:500])
         return
-
+ 
     csv_content = response.content.decode('utf-8')
     # Vérification simple du format CSV
     first_line = csv_content.splitlines()[0] if csv_content else ''
@@ -50,14 +36,14 @@ def fetch_and_store_battles(player_tag: str):
         print(f"⚠️ Le contenu reçu pour {player_tag} n'est pas un CSV valide :")
         print(csv_content[:300])
         return
-
+ 
     try:
         df = pd.read_csv(StringIO(csv_content))
     except Exception as e:
         print(f"❌ Erreur pandas pour {player_tag} : {e}")
         print(csv_content[:300])
         return
-
+ 
     cols_to_keep = [
         "team_0_clan_tag",
         "team_0_tag",
@@ -80,13 +66,13 @@ def fetch_and_store_battles(player_tag: str):
         print(f"✅ {len(records)} batailles insérées dans la collection 'battles' pour {player_tag}.")
     else:
         print(f"⚠️ Aucun enregistrement à insérer pour {player_tag}.")
-
+ 
 def get_all_player_tags():
     db = get_database()
     players_collection = db["players"]
     players = players_collection.find({}, {"player_tag": 1, "_id": 0})
     return [p["player_tag"] for p in players if "player_tag" in p]
-
+ 
 if __name__ == "__main__":
     player_tags = get_all_player_tags()
     if not player_tags:
