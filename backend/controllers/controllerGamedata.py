@@ -4,6 +4,8 @@ import pandas as pd
 from io import StringIO
 from pymongo import MongoClient
 from dotenv import load_dotenv
+import time
+import random
 
 load_dotenv()
  
@@ -74,9 +76,23 @@ def get_all_player_tags():
     return [p["player_tag"] for p in players if "player_tag" in p]
  
 if __name__ == "__main__":
-    player_tags = get_all_player_tags()
-    if not player_tags:
-        print("Aucun player_tag trouvé dans la base de données.")
-    else:
-        for player_tag in player_tags:
-            fetch_and_store_battles(player_tag)
+    while True:
+        player_tags = get_all_player_tags()
+        if not player_tags:
+            print("Aucun player_tag trouvé dans la base de données.")
+            break
+
+        for i in range(0, len(player_tags), 2):
+            batch = player_tags[i:i+2]
+
+            for player_tag in batch:
+                fetch_and_store_battles(player_tag)
+
+            # Pause entre chaque batch de 2 joueurs
+            delay = random.randint(60, 120)  # entre 1 et 2 minutes
+            print(f"⏱️ Attente de {delay} secondes avant les 2 prochains joueurs...")
+            time.sleep(delay)
+        
+        # Optionnel : pause entre les cycles complets
+        print("✅ Tous les joueurs ont été traités. Nouvelle boucle dans 5 minutes...")
+        time.sleep(300)  # Pause de 5 minutes

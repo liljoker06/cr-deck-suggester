@@ -1,195 +1,124 @@
 import os
 import sys
-# Ajoute le dossier parent au chemin pour importer le module database
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import glob
 import json
+import asyncio
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import get_database
 
-
-### CONVERTISSEUR DE TEMPS EN MINUTES ET SECONDES 
 def convert_tick_to_time(tick):
     seconds = tick / 60
     minutes = int(seconds // 60)
     remaining = int(seconds % 60)
     return f"{minutes}:{remaining:02}"
 
-RAW_REPLAY_PATH = "replays/replay_00GPQ2VCUR0L.json"
-OUTPUT_DIR = "games_parsed"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+async def process_replay(path, matches_collection):
+    match_id = os.path.basename(path).split("_")[-1].replace(".json", "")
 
-with open(RAW_REPLAY_PATH, "r", encoding="utf-8") as f:
-    data = json.load(f)
+    # 🔁 Vérifie si déjà en base
+    if await matches_collection.find_one({"match_id": match_id}):
+        print(f"⏭️ Match {match_id} déjà analysé. Ignoré.")
+        return
 
-# Vérifie si HTML présent
-if not data.get("success") or not data.get("html"):
-    print("❌ Erreur : fichier JSON invalide ou sans contenu HTML.")
-    exit()
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-soup = BeautifulSoup(data["html"], "html.parser")
+    if not data.get("success") or not data.get("html"):
+        print(f"❌ JSON invalide ou sans HTML pour {match_id}.")
+        return
 
-# === Extraction HTML ===
+    soup = BeautifulSoup(data["html"], "html.parser")
 
-match_id = os.path.basename(RAW_REPLAY_PATH).split("_")[-1].replace(".json", "")
-print(f"🔍 Analyse du match {match_id}...")
+    link = soup.select_one("a.item")
+    if not link:
+        print(f"❌ Lien de score introuvable pour {match_id}")
+        return
 
-# SCORE
-link = soup.select_one("a.item")
-if not link:
-    print("❌ Erreur : lien de score introuvable.")
-    exit()
-href = link.get("href", "")
-query = parse_qs(urlparse(href).query)
+    href = link.get("href", "")
+    query = parse_qs(urlparse(href).query)
+    team_tag = query.get("team_tags", ["unknown"])[0]
+    opponent_tag = query.get("opponent_tags", ["unknown"])[0]
+    score_team = int(query.get("team_crowns", [0])[0])
+    score_opponent = int(query.get("opponent_crowns", [0])[0])
+    winner = team_tag if score_team > score_opponent else opponent_tag
 
-team_tag = query.get("team_tags", ["unknown"])[0]
-opponent_tag = query.get("opponent_tags", ["unknown"])[0]
-score_team = int(query.get("team_crowns", [0])[0])
-score_opponent = int(query.get("opponent_crowns", [0])[0])
-winner = team_tag if score_team > score_opponent else opponent_tag
+    players_columns = soup.select("div.column.pad0topbottom")
+    team_cards = [img["data-card"] for img in players_columns[0].select("img.replay_card")] if len(players_columns) >= 2 else []
+    opponent_cards = [img["data-card"] for img in players_columns[1].select("img.replay_card")] if len(players_columns) >= 2 else []
 
-print(f"Équipe : {team_tag} ({score_team} couronnes)")
-print(f"Adversaire : {opponent_tag} ({score_opponent} couronnes)")
-print(f"Gagnant : {winner}")
-print(f"Score : {score_team} - {score_opponent} ({winner})")
+    replay_time_div = soup.select_one("div.replay_time")
+    end_time = None
+    if replay_time_div:
+        markers = replay_time_div.select("div.marker")
+        if markers:
+            end_time = markers[-1].get_text(strip=True)
 
-# DECKS
-players_columns = soup.select("div.column.pad0topbottom")
+    def extract_actions(selector, marker_map):
+        div = soup.select_one(selector)
+        actions = []
+        if div:
+            for card in div.select("img.replay_card"):
+                name = card.get("data-card")
+                time = card.get("data-t")
+                if name and time:
+                    t = int(time)
+                    actions.append({
+                        "card": name,
+                        "time": t,
+                        "time_human": convert_tick_to_time(t),
+                        "position": marker_map.get((name, t))
+                    })
+        return actions
 
-if len(players_columns) >= 2:
-    team_cards = [img["data-card"] for img in players_columns[0].select("img.replay_card")]
-    opponent_cards = [img["data-card"] for img in players_columns[1].select("img.replay_card")]
+    map_div = soup.select_one("div.map_stats_container div.map div.replay_map_container div.replay_map div.markers")
+    blue_positions = {
+        (m.get("data-c"), int(m.get("data-t"))): {"x": m.get("data-x"), "y": m.get("data-y")}
+        for m in map_div.select("div.blue")
+    } if map_div else {}
 
-    print("🔵 Deck team :", team_cards)
-    print("🔴 Deck opponent :", opponent_cards)
-else:
-    print("❌ Impossible de trouver les decks.")
-    team_cards = []
-    opponent_cards = []
+    red_positions = {
+        (m.get("data-c"), int(m.get("data-t"))): {"x": m.get("data-x"), "y": m.get("data-y")}
+        for m in map_div.select("div.red")
+    } if map_div else {}
 
-# TEMPS TOTAL DE LA GAME 
-end_time = None
-replay_time_div = soup.select_one("div.replay_time")
-if replay_time_div:
-    all_markers = replay_time_div.select("div.marker")
-    if all_markers:
-        end_time = all_markers[-1].get_text(strip=True)
-        print("Durée totale de la partie :", end_time)
-    else:
-        print("Aucun marqueur de temps trouvé.")
-else:
-    print("Bloc 'replay_time' introuvable.")
+    team_actions = extract_actions("div.replay_team.team", blue_positions)
+    opponent_actions = extract_actions("div.replay_team.opponent", red_positions)
 
-# ACTIONS TEAM
-team_actions = []
-team_cards_div = soup.select_one("div.replay_team.team")
-if team_cards_div:
-    for card in team_cards_div.select("img.replay_card"):
-        name = card.get("data-card")
-        time = card.get("data-t")
-        if name and time:
-            t = int(time)
-            team_actions.append((name, t))
-    print("Cartes jouées par la team bleue :")
-    for name, t in team_actions:
-        print(f"- {name} à ({convert_tick_to_time(t)})")
-else:
-    print("Bloc 'replay_team team' introuvable.")
-
-# ACTIONS OPPONENT
-opponent_actions = []
-opponent_cards_div = soup.select_one("div.replay_team.opponent")
-if opponent_cards_div:
-    for card in opponent_cards_div.select("img.replay_card"):
-        name = card.get("data-card")
-        time = card.get("data-t")
-        if name and time:
-            t = int(time)
-            opponent_actions.append((name, t))
-    print("Cartes jouées par l'adversaire :")
-    for name, t in opponent_actions:
-        print(f"- {name} à ({convert_tick_to_time(t)})")
-else:
-    print("Bloc 'replay_team opponent' introuvable.")
-
-# POSITIONS
-map_div = soup.select_one("div.map_stats_container div.map div.replay_map_container div.replay_map div.markers")
-if map_div:
-    blue_markers = map_div.select("div.blue")
-    red_markers = map_div.select("div.red")
-
-    # Dictionnaires positions (clé = (card, time))
-    blue_positions_map = {
-        (m.get("data-c"), int(m.get("data-t"))): {
-            "x": m.get("data-x"),
-            "y": m.get("data-y")
-        } for m in blue_markers
-    }
-    red_positions_map = {
-        (m.get("data-c"), int(m.get("data-t"))): {
-            "x": m.get("data-x"),
-            "y": m.get("data-y")
-        } for m in red_markers
+    output_data = {
+        "match_id": match_id,
+        "team": {
+            "tag": team_tag,
+            "score": score_team,
+            "deck": team_cards,
+            "actions": team_actions
+        },
+        "opponent": {
+            "tag": opponent_tag,
+            "score": score_opponent,
+            "deck": opponent_cards,
+            "actions": opponent_actions
+        },
+        "winner": winner,
+        "duration": end_time
     }
 
-    print("📍 Positions des cartes jouées :")
-    print("🔵 Team bleue :")
-    for key, pos in blue_positions_map.items():
-        print(f"- {key[0]} à {key[1]} → (x: {pos['x']}, y: {pos['y']})")
-    print("🔴 Team adverse :")
-    for key, pos in red_positions_map.items():
-        print(f"- {key[0]} à {key[1]} → (x: {pos['x']}, y: {pos['y']})")
-else:
-    print("❌ Bloc 'markers' introuvable dans replay_map.")
-    blue_positions_map = {}
-    red_positions_map = {}
+    await matches_collection.insert_one(output_data)
+    print(f"✅ Match {match_id} inséré en base.")
 
-# Fusion actions + positions + temps humain
-team_actions_with_pos = []
-for name, t in team_actions:
-    pos = blue_positions_map.get((name, t))
-    team_actions_with_pos.append({
-        "card": name,
-        "time": t,
-        "time_human": convert_tick_to_time(t),
-        "position": pos
-    })
+async def main():
+    db = get_database()
+    matches = db["matches"]
 
-opponent_actions_with_pos = []
-for name, t in opponent_actions:
-    pos = red_positions_map.get((name, t))
-    opponent_actions_with_pos.append({
-        "card": name,
-        "time": t,
-        "time_human": convert_tick_to_time(t),
-        "position": pos
-    })
+    json_files = glob.glob("replays/replay_*.json")
+    if not json_files:
+        print("⚠️ Aucun fichier JSON trouvé.")
+        return
 
-# STRUCTURED OUTPUT
-output_data = {
-    "match_id": match_id,
-    "team": {
-        "tag": team_tag,
-        "score": score_team,
-        "deck": team_cards,
-        "actions": team_actions_with_pos
-    },
-    "opponent": {
-        "tag": opponent_tag,
-        "score": score_opponent,
-        "deck": opponent_cards,
-        "actions": opponent_actions_with_pos
-    },
-    "winner": winner,
-    "duration": end_time
-}
+    for file in json_files:
+        await process_replay(file, matches)
 
-db = get_database()
-matches_collection = db["matches"]
-
-# Vérifie si le match existe déjà (pour éviter les doublons)
-if not matches_collection.find_one({"match_id": output_data["match_id"]}):
-    matches_collection.insert_one(output_data)
-    print(f"✅ Match {output_data['match_id']} analysé et inséré en base MongoDB.")
-else:
-    print(f"⚠️ Match {output_data['match_id']} déjà présent dans la base.")
+if __name__ == "__main__":
+    asyncio.run(main())
