@@ -1,8 +1,16 @@
-import requests
+import requests, os, json, sys
+from typing import List
 from bs4 import BeautifulSoup
 from database import get_database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from models.modelPlayer import Player
 
 BASE_URL = "https://clashroyale.fandom.com"
+PLAYERS_URL = "https://royaleapi.com/players/leaderboard/season/2025-06"
+DEBUG_FILE = "debug_player.html"
+OUTPUT_FILE = "players_data.json"
+BACKEND_DIR = os.path.join(os.path.dirname(__file__), "..")
 
 import re
 
@@ -238,14 +246,130 @@ def update_cards(db):
 
     print("✅ Mise à jour terminée pour toutes les cartes et évolutions.")
 
+def save_html_file(content, filename):
+    filepath = os.path.join(BACKEND_DIR, filename)
+    if not os.path.exists(filepath):
+        with open(filepath, "wb") as f:
+            f.write(content)
 
-# fonction players data 
+def extract_json_from_html(html_content):
+    start = html_content.find("initRoster(")
+    if start == -1:
+        return None
+    
+    end = html_content.find(");", start)
+    if end == -1:
+        return None
+    
+    bloc = html_content[start:end]
+    array_match = re.search(r'\[\s*(\{[\s\S]*?\})\s*(,\s*\{[\s\S]*?\}\s*)*\]', bloc)
+    
+    if not array_match:
+        return None
+    
+    try:
+        data = json.loads(array_match.group(0))
+        output_path = os.path.join(BACKEND_DIR, OUTPUT_FILE)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return data
+    except:
+        return None
+
+def scrape_players():
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+    
+    try:
+        response = requests.get(PLAYERS_URL, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        save_html_file(response.content, DEBUG_FILE)
+        
+        json_data = extract_json_from_html(response.text)
+        if json_data:
+            print(f"✅ {len(json_data)} joueurs extraits du JSON")
+
+
+    except requests.RequestException as e:
+        print(f"❌ Erreur lors de la requête : {e}")
+        return None
+
+            
+def get_data_json():
+    output_path = os.path.join(BACKEND_DIR, OUTPUT_FILE)
+    if not os.path.exists(output_path):
+        print(f"❌ Le fichier {OUTPUT_FILE} n'existe pas.")
+        return None
+    
+    with open(output_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    
+    return data
+
+def parse_players_from_json(data: List[dict]) -> List[Player]:
+    players = []
+
+    for item in data:
+        try:
+            player = Player(
+                name=item.get("name", ""),
+                player_tag=item.get("tag", ""),
+                level=item.get("expLevel", 0),
+                trophies=item.get("trophies", 0),
+                clan=item.get("clan", {}).get("name", "Sans clan") if not item.get("not_in_clan", False) else "Sans clan",
+                badge_clan=item.get("clan", {}).get("badge", {}).get("name", "") if not item.get("not_in_clan", False) else "",
+                pays=item.get("country_name", "Inconnu")
+            )
+            players.append(player)
+        except Exception as e:
+            print(f"Erreur lors de la création d'un joueur : {e}")
+            continue
+
+    return players
+
+def insert_players(db, data):
+
+    player_collection = db["players"]
+
+    players = parse_players_from_json(data)
+
+    for player in players:
+        # On vérifie si le joueur existe déjà via son tag
+        exists = player_collection.find_one({"player_tag": player.player_tag})
+        if exists:
+            print(f"⚠️ Joueur {player.name} déjà présent. Ignoré.")
+            continue
+
+        
+        player_dict = {
+            "name": player.name,
+            "player_tag": player.player_tag,
+            "level": player.level,
+            "trophies": player.trophies,
+            "clan": player.clan,
+            "badge_clan": player.badge_clan,
+            "pays": player.pays
+        }
+
+        player_collection.update_one(
+            {"player_tag": player.player_tag},
+            {"$set": player_dict},
+            upsert=True
+        )
+
+    print(f"✅ {len(players)} joueurs insérés avec succès.")
+
 
 
 def run_update():
     db = get_database()
     update_arenas(db)
     update_cards(db)
-    
+    scrape_players()
+    data = get_data_json()
+    if data:
+        insert_players(db, data)
     print("Mise à jour terminée.")
 
