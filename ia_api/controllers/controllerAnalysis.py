@@ -1,33 +1,67 @@
-from collections import Counter, defaultdict
-from services.cache import cached_matches, cached_cards
+from database import db
+cards_collection = db.cards
+matches_collection = db.matches
 
 
-def analyze_deck(deck, matches, cards_list):
-    def parse_elixir_cost(cost_str):
-        try:
-            return float(cost_str.split()[0])
-        except Exception:
-            return 0.0
+def parse_elixir_cost(cost_str):
+    try:
+        return float(cost_str.split()[0])
+    except Exception:
+        return 0.0
 
-    def parse_int_with_commas(s):
-        try:
-            return int(s.replace(",", ""))
-        except Exception:
-            return 0
+def parse_int_with_commas(s):
+    try:
+        return int(s.replace(",", ""))
+    except Exception:
+        return 0
 
-    # Prépare dict cartes pour accès rapide
+def parse_float_or_zero(value):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.0
+
+async def analyze_deck(deck: list[str], db) -> dict:
+    # 1) Récupérer les cartes dans MongoDB
+    query = {
+        "$or": [{"name": {"$regex": f"^{name}$", "$options": "i"}} for name in deck]
+    }
+    cards_cursor = db.cards.find(query)
+    cards_list = await cards_cursor.to_list(length=None)
+
+    print(f"Cartes trouvées dans la base de données : {len(cards_list)}")
+    print(f"Détails des cartes : {cards_list}")
+
+    # Préparer dict cartes pour accès rapide
     cards_dict = {}
     for card in cards_list:
+        # Parsing simple des valeurs numériques
+        def parse_float_or_zero(value):
+            try:
+                return float(str(value).split()[0].replace(",", ""))
+            except:
+                return 0.0
+
+        def parse_int_or_zero(value):
+            try:
+                return int(str(value).replace(",", ""))
+            except:
+                return 0
+
         name = card["name"].lower()
         cards_dict[name] = {
-            "elixir_cost": parse_elixir_cost(card.get("elixir_cost", "0")),
-            "dps": parse_float_or_zero(card.get("dps", "0")),
-            "hitpoints": parse_int_with_commas(card.get("hitpoints", "0")),
+            "elixir_cost": parse_float_or_zero(card.get("elixir_cost", 0)),
+            "dps": parse_float_or_zero(card.get("dps", 0)),
+            "hitpoints": parse_int_or_zero(card.get("hitpoints", 0)),
             "range": card.get("range", "N/A"),
             "description": card.get("description", ""),
             "category": card.get("category", ""),
             "image": card.get("image", ""),
         }
+
+    # 2) Récupérer les matchs dans MongoDB (optionnel: filtrer par deck si tu veux)
+    matches_cursor = db.matches.find()  # tu peux filtrer si besoin
+    matches = await matches_cursor.to_list(length=100)  # limite 100 pour la perf
 
     # Calcul stats globales deck
     total_elixir = 0.0
@@ -42,11 +76,11 @@ def analyze_deck(deck, matches, cards_list):
     count = len(deck) if deck else 1
     avg_elixir = total_elixir / count
 
-    # Exemple de win_rate_estimation simple (à remplacer par modèle ML)
-    win_rate_estimation = 0  # placeholder
+    # Exemple de win_rate_estimation simple (à améliorer)
+    win_rate_estimation = 0
     matches_found = len(matches)
 
-    # Analyse cartes avec insight simple
+    # Analyse cartes
     cards_analysis = []
     for card_name in deck:
         c = cards_dict.get(card_name.lower())
@@ -90,6 +124,7 @@ def analyze_deck(deck, matches, cards_list):
                     positions.append((x, y))
                 except:
                     pass
+
     if positions:
         avg_x = sum(x for x, y in positions) / len(positions)
         avg_y = sum(y for x, y in positions) / len(positions)
@@ -109,28 +144,9 @@ def analyze_deck(deck, matches, cards_list):
         "positioning_insights": [positioning_summary],
         "cards_analysis": cards_analysis,
         "positioning_summary": positioning_summary,
-        "analysis": "Analyse sommaire réalisée avec données disponibles.",
+        "analysis": "Analyse sommaire réalisée avec données MongoDB en temps réel.",
         "cards_info": [cards_dict.get(c.lower(), {}) for c in deck],
         "top_positioned_cards": [],  # À développer si besoin
     }
 
     return result
-
-
-def extract_float(value):
-    """Extrait un float en supprimant les virgules, parenthèses, etc."""
-    if isinstance(value, (int, float)):
-        return float(value)
-    if not value:
-        return 0.0
-    value = str(value).split(" ")[0].replace(",", "").replace("(", "").replace(")", "")
-    try:
-        return float(value)
-    except ValueError:
-        return 0.0
-    
-def parse_float_or_zero(value):
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return 0.0
