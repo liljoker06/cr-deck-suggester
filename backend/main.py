@@ -6,8 +6,9 @@ from routes.routeData import router as update_router
 from routes.routeArenas import router as arenas_router
 from routes.routePlayers import router as players_controller
 from routes.routeStats import router as stats_router
-from routes.routeCards import router as cards_router
 from routes.routeDecks import router as decks_router
+from routes.routeMatch import router as fetch_all_matches
+from routes.routeCard import router as card_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +30,8 @@ app.add_middleware(
 
 # Inclusion des routes
 app.include_router(update_router.router, prefix="/api")
+app.include_router(fetch_all_matches, prefix="/api")
+app.include_router(card_router, prefix="/api")
 app.mount("/api/cards", cards_router)
 app.mount("/api/decks", decks_router)  
 app.mount("/api/data", update_router)
