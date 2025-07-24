@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useDecks } from '../hooks/useApi'
-import Deck from '../components/card/Deck'
 
 export default function Decks() {
   const [filters, setFilters] = useState({
@@ -154,9 +153,9 @@ export default function Decks() {
                       key={cardIndex}
                       className="aspect-square bg-gray-800 rounded-lg p-2 flex flex-col items-center justify-center text-center border border-gray-600"
                     >
-                      {card.icon_url ? (
+                      {card.image ? (
                         <img
-                          src={card.icon_url}
+                          src={card.image}
                           alt={card.name}
                           className="w-8 h-8 object-contain mb-1"
                           onError={(e) => {
@@ -165,9 +164,9 @@ export default function Decks() {
                           }}
                         />
                       ) : null}
-                      <div 
-                        className="text-lg" 
-                        style={{ display: card.icon_url ? 'none' : 'block' }}
+                      <div
+                        className="text-lg"
+                        style={{ display: card.image ? 'none' : 'block' }}
                       >
                         🃏
                       </div>
