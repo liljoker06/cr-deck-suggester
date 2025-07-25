@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(update_router.router, prefix="/api")
 app.include_router(fetch_all_matches, prefix="/api")
 app.include_router(card_router, prefix="/api")
+
 app.mount("/api/decks", decks_router)  
 app.mount("/api/data", update_router)
 app.include_router(arenas_router, prefix="/api")

@@ -128,8 +128,13 @@ export default function DraggableCard({ card, isInDeck = false, onAddToDeck }) {
         <div className="flex justify-between items-center text-xs mb-2">
          
           {card.elixir_cost && (
-            <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
-              {card.elixir_cost} ⚡
+            <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              {card.elixir_cost}
+              <img 
+                src="/elixir.png" 
+                alt="Élixir" 
+                className="w-3 h-3 inline-block"
+              />
             </span>
           )}
         </div>

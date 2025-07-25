@@ -93,7 +93,7 @@ export default function CardDecks({ deckCards, onCardDrop, onCardRemove }) {
               ) : null}
               <div className="text-2xl" style={{ display: card.image ? 'none' : 'block' }}>
                 {card.category === 'Troop' ? '👥' : 
-                 card.category === 'Spell' ? '⚡' : 
+                 card.category === 'Spell' ? '  ' : 
                  card.category === 'Building' ? '🏰' : '🃏'}
               </div>
             </div>
@@ -152,12 +152,22 @@ export default function CardDecks({ deckCards, onCardDrop, onCardRemove }) {
           </span>
           <span className="text-gray-300">
             Coût moyen: <span className="text-purple-400 font-bold">
-              {averageElixirCost}⚡
+              {averageElixirCost}
+              <img 
+                src="/elixir.png" 
+                alt="Élixir" 
+                className="w-3 h-3 inline-block"
+              />
             </span>
           </span>
           <span className="text-gray-300">
             Coût total: <span className="text-blue-400 font-bold">
-              {totalElixirCost}⚡
+              {totalElixirCost}
+              <img 
+                src="/elixir.png" 
+                alt="Élixir" 
+                className="w-3 h-3 inline-block"
+              />
             </span>
           </span>
         </div>

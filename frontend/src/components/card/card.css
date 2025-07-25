@@ -1,0 +1,50 @@
+.deck-analyse-overlay {
+  position: absolute;
+  top: 50%;
+  left: 34%;
+  transform: translateY(-98%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.deck-analyse-box {
+  border-radius: 0.5rem;
+  max-height: 125px;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-analyse-box h3 {
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 0.5rem; /* petit espacement sous le titre */
+  text-align: center;
+  flex-shrink: 0; /* empêche le titre de se rétrécir */
+}
+
+.deck-analyse-content {
+  color: #374151;
+  white-space: pre-wrap;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Animation pour l'apparition en fondu */
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCards } from '../../hooks/useApi';
 import CardDecks from './CardDecks';
 import DraggableCard from './DraggableCard';
+import Avis from './Avis';
 // import FilterBar from './FilterBar';
 
 export default function Deck() {
@@ -138,16 +139,25 @@ export default function Deck() {
             <button
               onClick={saveDeck}
               disabled={deckCards.filter(card => card).length !== 8}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-200"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-200"
             >
-              Sauvegarder le Deck (console.log)
+              Sauvegarder le Deck
             </button>
+              <Avis 
+                deck={deckCards.filter(card => card !== null).map(card => card.name)} 
+                disabled={deckCards.filter(card => card).length !== 8}
+              />
+
             <button
               onClick={resetDeck}
               className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200"
             >
               Vider le Deck
             </button>
+          </div>
+
+          {/* Composant d'avis avec l'IA */}
+          <div className="mt-8">
           </div>
         </div>
 
