@@ -1,6 +1,6 @@
-# 🧠 Clash Royale Deck Analyzer – Projet IA Locale
+# 🧠 Clash Royale Deck Analyzer – Projet IA Locale (sans Ollama)
 
-Ce projet analyse les decks de Clash Royale à partir de replays, en extrayant des statistiques avancées et en générant des conseils personnalisés grâce à une IA **locale** (Ollama).
+Ce projet analyse les decks de Clash Royale à partir de **replays** en extrayant des **statistiques avancées** (taux de présence, support, position moyenne, coût moyen, etc.) et en générant des conseils personnalisés via des algorithmes internes **sans aucun modèle IA externe comme Ollama**.
 
 ---
 
@@ -10,9 +10,10 @@ Ce projet analyse les decks de Clash Royale à partir de replays, en extrayant d
 .
 ├── backend/             # API principale + scraping MongoDB
 │   ├── scraping/        # Scripts de scraping et d'analyse
+│   ├── controllers/     # Contrôleurs de scraping/API
 │   ├── main.py          # Serveur FastAPI (port 8000)
 │   └── ...
-├── ia_api/              # API dédiée à l'IA locale (Ollama)
+├── ia_api/              # API IA (algos internes sans modèle externe)
 │   └── main.py          # Serveur FastAPI (port 8001)
 ├── frontend/            # Interface web (Next.js / Vite)
 ├── .env                 # Clé API et configuration
@@ -26,7 +27,6 @@ Ce projet analyse les decks de Clash Royale à partir de replays, en extrayant d
 * Python 3.10+
 * Node.js 18+
 * MongoDB en local
-* [Ollama](https://ollama.com/) (pour lancer le modèle IA localement)
 
 ---
 
@@ -66,7 +66,18 @@ Clique sur `POST /update-data` pour lancer l'update des données.
 
 ### 3. Lancer les scripts de scraping dans **deux autres terminaux avec le même venv**
 
-#### a. Scraper les parties Clash Royale
+Lance la route `/update-data` via Swagger pour démarrer la mise à jour des données :
+👉 [http://127.0.0.1:8000/docs#/default/update_data_update_data_post](http://127.0.0.1:8000/docs#/default/update_data_update_data_post)
+
+#### a. scraper
+
+```bash
+cd backend
+venv\Scripts\activate
+python controllers/controllerGamedata.py
+```
+
+#### b. Scraper les parties détailler Clash Royale
 
 ```bash
 cd backend
@@ -74,7 +85,7 @@ venv\Scripts\activate
 python scraping/gameScrap.py
 ```
 
-#### b. Analyser les replays collectés
+#### c. Analyser les replays collectés
 
 ```bash
 cd backend
@@ -84,15 +95,22 @@ python scraping/gameAnalyst.py
 
 ---
 
-## 🧠 Lancement de l'IA (analyse des decks via Ollama)
+### 4. Scraper toutes les parties d'un joueur (par son tag)
 
-### 1. Démarrer Ollama (dans un terminal séparé)
+Dans Swagger ([http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)), utilise la route :
 
-```bash
-ollama run llama3
+```http
+POST /fetch-player-matches
 ```
 
-### 2. Aller dans le dossier `ia_api`
+Cela appelle la fonction du fichier :
+`backend/controllers/controllerGamedata.py`
+
+---
+
+## 🧠 Lancement de l'API d'analyse (algos internes)
+
+### 1. Aller dans le dossier `ia_api`
 
 ```bash
 cd ia_api
@@ -101,7 +119,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Lancer l'API de l’IA (port 8001)
+### 2. Lancer l'API (port 8001)
 
 ```bash
 uvicorn main:app --reload --port 8001
@@ -121,24 +139,24 @@ npm run dev
 ```
 
 Interface disponible sur :
-👉 [http://localhost:5173](http://localhost:5173) (ou autre port indiqué)
+👉 [http://localhost:5173](http://localhost:5173)
 
 ---
 
 ## 📌 Résumé rapide
 
-| Tâche                 | Commande                                                 |
-| --------------------- | -------------------------------------------------------- |
-| API principale        | `uvicorn main:app --reload` (dans `/backend`)            |
-| Scraper les parties   | `python scraping/gameScrap.py`                           |
-| Analyser les parties  | `python scraping/gameAnalyst.py`                         |
-| Lancer IA avec Ollama | `ollama run llama3`                                     |
-| API IA locale         | `uvicorn main:app --reload --port 8001` (dans `/ia_api`) |
-| Frontend              | `npm install && npm run dev` (dans `/frontend`)          |
+| Tâche                      | Commande                                                              |
+| -------------------------- | --------------------------------------------------------------------- |
+| API principale             | `uvicorn main:app --reload` (dans `/backend`)                         |
+| Scraper les parties        | `python scraping/gameScrap.py`                                        |
+| Analyser les parties       | `python scraping/gameAnalyst.py`                                      |
+| Scraper les parties joueur | `POST /fetch-player-matches` via `/controllers/controllerGamedata.py` |
+| API IA interne             | `uvicorn main:app --reload --port 8001` (dans `/ia_api`)              |
+| Frontend                   | `npm install && npm run dev` (dans `/frontend`)                       |
 
 ---
 
-## 🔪 Exemple de requête à l’IA
+## 🔪 Exemple de requête à l’IA (algos internes)
 
 **POST** `http://localhost:8001/api/analyze-deck`
 
@@ -162,7 +180,7 @@ Interface disponible sur :
 ## 🙌 Contribuer
 
 Ce projet est un outil pédagogique open-source.
-Toute contribution est bienvenue : amélioration des modèles, interface utilisateur, ajout de nouvelles statistiques...
+Toute contribution est bienvenue : amélioration des algorithmes, interface utilisateur, ajout de nouvelles statistiques...
 
 ---
 
