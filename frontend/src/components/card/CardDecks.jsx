@@ -106,7 +106,12 @@ export default function CardDecks({ deckCards, onCardDrop, onCardRemove }) {
               <div className="flex justify-center items-center gap-1">
                 {card.elixir_cost && (
                   <span className="bg-purple-600 text-white px-1 py-0.5 rounded text-xs">
-                    {card.elixir_cost}⚡
+                    {card.elixir_cost}
+                    <img 
+                      src="/elixir.png" 
+                      alt="Élixir" 
+                      className="w-3 h-3 inline-block"
+                    />
                   </span>
                 )}
               </div>

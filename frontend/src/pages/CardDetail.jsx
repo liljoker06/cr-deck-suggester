@@ -199,6 +199,7 @@ export default function CardDetail() {
                       <img 
                         src={card.evolution_image} 
                         alt={`${card.name} évoluée`}
+                        referrerPolicy="no-referrer"
                         className="w-full h-32 object-contain rounded-lg bg-white/10"
                       />
                     </div>
