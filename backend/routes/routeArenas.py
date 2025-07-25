@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
+from typing import List
 from controllers.controllerArenas import ArenasController
 from models.modelArena import Arena
 import logging
@@ -9,13 +9,8 @@ arenas_controller = ArenasController()
 
 @router.get("/arenas", response_model=List[Arena])
 async def get_all_arenas():
-    """
-    Récupère toutes les arènes
-    """
     try:
-        arenas = arenas_controller.get_all_arenas()
-        return arenas
-        
+        return await arenas_controller.get_all_arenas()
     except Exception as e:
         logging.error(f"Erreur lors de la récupération des arènes: {e}")
         raise HTTPException(status_code=500, detail="Erreur serveur")
@@ -24,13 +19,8 @@ async def get_all_arenas():
 async def search_arenas_by_name(
     pattern: str = Query(..., description="Motif de recherche pour le nom de l'arène")
 ):
-    """
-    Recherche des arènes par nom (insensible à la casse)
-    """
     try:
-        arenas = arenas_controller.get_arenas_by_name_pattern(pattern)
-        return arenas
-        
+        return await arenas_controller.get_arenas_by_name_pattern(pattern)
     except Exception as e:
         logging.error(f"Erreur lors de la recherche d'arènes avec '{pattern}': {e}")
         raise HTTPException(status_code=500, detail="Erreur serveur")
