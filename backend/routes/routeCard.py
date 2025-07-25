@@ -4,5 +4,5 @@ from controllers.controllerCard import get_all_cards
 router = APIRouter()
 
 @router.get("/cards")
-def fetch_cards():
-    return get_all_cards()
+async def fetch_cards():
+    return await get_all_cards()
