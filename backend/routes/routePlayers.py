@@ -23,12 +23,22 @@ async def get_all_players(
         if min_trophies is not None and max_trophies is not None:
             if min_trophies > max_trophies:
                 raise HTTPException(status_code=400, detail="Le minimum ne peut pas être supérieur au maximum")
-            players = players_controller.get_players_by_trophy_range(min_trophies, max_trophies, limit)
+            players = await players_controller.get_players_by_trophy_range(min_trophies, max_trophies, limit)
+
+        elif country:
+            players = await players_controller.get_players_by_country(country, limit)
+
+        elif clan:
+            players = await players_controller.get_players_by_clan(clan, limit)
+
+        elif level is not None:
+            players = await players_controller.get_players_by_level(level, limit)
+
         else:
-            players = players_controller.get_all_players(limit)
-            
+            players = await players_controller.get_all_players(limit)
+
         return players
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -44,9 +54,9 @@ async def search_players_by_name(
     Recherche des joueurs par nom (insensible à la casse)
     """
     try:
-        players = players_controller.search_players_by_name(pattern, limit)
+        players = await players_controller.search_players_by_name(pattern, limit)
         return players
-        
+
     except Exception as e:
         logging.error(f"Erreur lors de la recherche de joueurs avec '{pattern}': {e}")
         raise HTTPException(status_code=500, detail="Erreur serveur")
