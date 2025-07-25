@@ -5,6 +5,8 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 async def query_llm(prompt: str, model: str = "llama3.1:8b") -> str:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            print(f"🔍 Envoi de la requête à Ollama avec le modèle {model}...")
+            print(f"📜 Prompt envoyé : {prompt}")  
             response = await client.post(
                 OLLAMA_URL,
                 json={
