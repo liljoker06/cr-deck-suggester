@@ -136,13 +136,6 @@ export default function Deck() {
           
           {/* Boutons d'action */}
           <div className="mt-6 flex gap-4 justify-center">
-            <button
-              onClick={saveDeck}
-              disabled={deckCards.filter(card => card).length !== 8}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-200"
-            >
-              Sauvegarder le Deck
-            </button>
               <Avis 
                 deck={deckCards.filter(card => card !== null).map(card => card.name)} 
                 disabled={deckCards.filter(card => card).length !== 8}
