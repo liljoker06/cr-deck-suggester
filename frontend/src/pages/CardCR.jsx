@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCards } from '../hooks/useApi'
 
 export default function CardCR() {
@@ -143,9 +144,10 @@ export default function CardCR() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {cards.map((card, index) => (
-            <div
+            <Link
               key={card.name || index}
-              className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4 hover:bg-white/20 transition-all duration-200 transform hover:scale-105"
+              to={`/card/${encodeURIComponent(card.name)}`}
+              className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4 hover:bg-white/20 transition-all duration-200 transform hover:scale-105 block"
             >
               {/* Image de la carte */}
               <div className="aspect-square rounded-lg mb-3 flex items-center justify-center">
@@ -171,11 +173,15 @@ export default function CardCR() {
                   {card.name}
                 </h3>
                 
-                <div className="flex justify-between items-center text-xs mb-2">
-                 
+                <div className="flex justify-center items-center text-xs mb-2">
                   {card.elixir_cost && (
-                    <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
-                      {card.elixir_cost} ⚡
+                    <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                      {card.elixir_cost}
+                      <img 
+                        src="/elixir.png" 
+                        alt="Élixir" 
+                        className="w-3 h-3 inline-block"
+                      />
                     </span>
                   )}
                 </div>
@@ -184,7 +190,7 @@ export default function CardCR() {
                   {card.category || 'Catégorie inconnue'}
                 </div>
                 
-                {card.evolution_ids && card.evolution_ids.length > 0 && (
+                {card.evolution && (
                   <div className="mt-2">
                     <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
                       🔄 Évolution
@@ -192,7 +198,7 @@ export default function CardCR() {
                   </div>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

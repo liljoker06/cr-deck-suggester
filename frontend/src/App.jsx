@@ -5,6 +5,7 @@ import {Route, Routes} from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import CardCR from './pages/CardCR.jsx';
 import Arenas from './pages/Arenas.jsx';
+import CardDetail from './pages/CardDetail.jsx';
 import ArenaDetail from './pages/ArenaDetail.jsx';
 import Decks from './pages/Decks.jsx';
 import DeckBuilder from './pages/DeckBuilder.jsx';
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/cards" element={<CardCR />} />
         <Route path="/cartes" element={<CardCR />} />
+        <Route path="/card/:cardNumber" element={<CardDetail />} />
         <Route path="/arenas" element={<Arenas />} />
         <Route path="/arena/:arenaNumber" element={<ArenaDetail />} />
         <Route path="/decks" element={<Decks />} />

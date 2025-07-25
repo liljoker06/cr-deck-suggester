@@ -2,6 +2,7 @@ import React from 'react'
 import { useGlobalStats } from '../hooks/useApi'
 import DataDebugPanel from '../components/debug/DataDebugPanel'
 import { showDebugPanel } from '../config'
+import Avis from '../components/card/Avis'
 
 export default function Home() {
   const { stats, loading, error, refetch } = useGlobalStats();

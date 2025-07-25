@@ -55,6 +55,36 @@ export const useCards = (filters = {}) => {
   return { cards, loading, error };
 };
 
+export const useCard = (cardName) => {
+  const [card, setCard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCard = async () => {
+      if (!cardName) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await apiService.getCardByName(cardName);
+        setCard(data);
+      } catch (err) {
+        setError(err.message);
+        console.error('Erreur lors du chargement de la carte:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCard();
+  }, [cardName]);
+
+  return { card, loading, error };
+};
+
 export const useArenas = () => {
   const [arenas, setArenas] = useState([]);
   const [loading, setLoading] = useState(true);

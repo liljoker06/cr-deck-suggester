@@ -175,7 +175,12 @@ export default function Decks() {
                       </span>
                       {card.elixir_cost && (
                         <span className="text-xs text-purple-300">
-                          {card.elixir_cost}⚡
+                          {card.elixir_cost}
+                          <img 
+                            src="/elixir.png" 
+                            alt="Élixir" 
+                            className="w-3 h-3 inline-block"
+                          />
                         </span>
                       )}
                     </div>
