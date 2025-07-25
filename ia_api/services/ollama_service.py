@@ -14,11 +14,8 @@ async def query_llm(prompt: str, model: str = "llama3.1:8b") -> str:
                 }
             )
             response.raise_for_status()
-
             result = response.json()
-            print("✅ Réponse brute Ollama:", result)
-
-            return result.get("response", "❌ Champ 'response' manquant dans la réponse.")
+            return result.get("response", "⚠️ Réponse vide.")
     except Exception as e:
-        print("❌ Exception dans query_llm:", e)
-        return f"❌ Erreur : {e}"
+        print(f"❌ Erreur dans query_llm: {e}")
+        return f"❌ Erreur : {str(e)}"

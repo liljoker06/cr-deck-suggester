@@ -55,5 +55,5 @@ async def analyze_deck_ai(data: DeckRequest, request: Request):
 
 @router.get("/test-ollama")
 async def test_ollama():
-    from services.ollama_service import query_llm
-    return {"response": await query_llm("Parle-moi de Clash Royale.")}
+    response = await query_llm("Parle-moi de Clash Royale.")
+    return {"response": response}
