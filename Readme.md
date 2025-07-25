@@ -89,7 +89,7 @@ python scraping/gameAnalyst.py
 ### 1. Démarrer Ollama (dans un terminal séparé)
 
 ```bash
-ollama run mistral
+ollama run llama3
 ```
 
 ### 2. Aller dans le dossier `ia_api`
@@ -132,7 +132,7 @@ Interface disponible sur :
 | API principale        | `uvicorn main:app --reload` (dans `/backend`)            |
 | Scraper les parties   | `python scraping/gameScrap.py`                           |
 | Analyser les parties  | `python scraping/gameAnalyst.py`                         |
-| Lancer IA avec Ollama | `ollama run mistral`                                     |
+| Lancer IA avec Ollama | `ollama run llama3`                                     |
 | API IA locale         | `uvicorn main:app --reload --port 8001` (dans `/ia_api`) |
 | Frontend              | `npm install && npm run dev` (dans `/frontend`)          |
 
