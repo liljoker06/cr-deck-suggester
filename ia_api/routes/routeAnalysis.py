@@ -1,16 +1,39 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
+from typing import List
 from controllers.controllerAnalysis import analyze_deck
-from services.cache import cached_matches, cached_cards
+from services.ollama_service import query_llm
+import json  
 
 router = APIRouter()
 
 class DeckRequest(BaseModel):
-    deck: list[str]
+    deck: List[str]
 
-@router.post("/analyze")
-def analyze_deck_route(data: DeckRequest):
-    if not cached_matches or not cached_cards:
-        raise HTTPException(status_code=503, detail="Les données ne sont pas encore chargées depuis le backend.")
-    result = analyze_deck(data.deck, cached_matches, cached_cards)
-    return result
+@router.post("/analyze-deck")
+async def analyze_deck_ai(data: DeckRequest, request: Request):
+    db = request.app.state.db
+    analysis = await analyze_deck(data.deck, db)
+    if not analysis:
+        return {"error": "Aucune donnée d'analyse trouvée pour ce deck."}
+    
+    print("Analyse du deck :", analysis)
+
+    formatted_stats = json.dumps(analysis, indent=2, ensure_ascii=False)
+
+    prompt = f"""
+Tu es un expert en stratégie Clash Royale.
+
+Voici les statistiques d’un deck :
+{formatted_stats}
+
+Analyse :
+- Les points forts du deck
+- Les faiblesses possibles
+- Des suggestions de cartes à remplacer pour améliorer les performances
+
+Ta réponse doit être claire et concise, destinée à un joueur débutant ou intermédiaire.
+"""
+
+    response = await query_llm(prompt)
+    return {"summary": response}
