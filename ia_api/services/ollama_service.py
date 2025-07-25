@@ -2,9 +2,11 @@ import httpx
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-async def query_llm(prompt: str, model: str = "llama3") -> str:
+async def query_llm(prompt: str, model: str = "llama3.1:8b") -> str:
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            print(f"🔍 Envoi de la requête à Ollama avec le modèle {model}...")
+            print(f"📜 Prompt envoyé : {prompt}")  
             response = await client.post(
                 OLLAMA_URL,
                 json={
@@ -15,7 +17,7 @@ async def query_llm(prompt: str, model: str = "llama3") -> str:
             )
             response.raise_for_status()
             result = response.json()
-            return result.get("response", "⚠️ Réponse vide de l'IA.")
+            return result.get("response", "⚠️ Réponse vide.")
     except Exception as e:
-        print("❌ Erreur dans query_llm:", e)
-        return f"Erreur avec Ollama : {str(e)}"
+        print(f"❌ Erreur dans query_llm: {e}")
+        return f"❌ Erreur : {str(e)}"
