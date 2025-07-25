@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from database import get_database
 from models.modelPlayer import Player
 
@@ -7,50 +7,35 @@ class PlayersController:
         self.db = get_database()
         self.collection = self.db["players"]
 
-    def get_all_players(self, limit: int = 100) -> List[Player]:
-        """
-        Récupère tous les joueurs de la base de données (avec limite pour éviter la surcharge)
-        """
+    async def get_all_players(self, limit: int = 100) -> List[Player]:
         try:
-            players_data = list(self.collection.find({}, {"_id": 0}).limit(limit).sort("trophies", -1))
-            players = [Player(**player) for player in players_data]
-            return players
+            cursor = self.collection.find({}, {"_id": 0}).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la récupération des joueurs : {e}")
             return []
 
-
-
-    def search_players_by_name(self, pattern: str, limit: int = 50) -> List[Player]:
-        """
-        Recherche des joueurs dont le nom contient le motif donné (insensible à la casse)
-        """
+    async def search_players_by_name(self, pattern: str, limit: int = 50) -> List[Player]:
         try:
-            players_data = list(self.collection.find(
-                {"name": {"$regex": pattern, "$options": "i"}}, 
+            cursor = self.collection.find(
+                {"name": {"$regex": pattern, "$options": "i"}},
                 {"_id": 0}
-            ).limit(limit).sort("trophies", -1))
-            
-            players = [Player(**player) for player in players_data]
-            return players
+            ).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la recherche de joueurs avec le motif '{pattern}' : {e}")
             return []
-# 
-    def get_players_count(self) -> int:
-        """
-        Récupère le nombre total de joueurs
-        """
+
+    async def get_players_count(self) -> int:
         try:
-            return self.collection.count_documents({})
+            return await self.collection.count_documents({})
         except Exception as e:
             print(f"❌ Erreur lors du comptage des joueurs : {e}")
             return 0
 
-    def get_players_stats(self) -> dict:
-        """
-        Récupère des statistiques générales sur les joueurs
-        """
+    async def get_players_stats(self) -> dict:
         try:
             pipeline = [
                 {
@@ -75,11 +60,11 @@ class PlayersController:
                     }
                 }
             ]
-            
-            result = list(self.collection.aggregate(pipeline))
+            cursor = self.collection.aggregate(pipeline)
+            result = await cursor.to_list(length=1)
             if result:
                 stats = result[0]
-                stats.pop("_id", None)  # Supprimer l'_id
+                stats.pop("_id", None)
                 return stats
             else:
                 return {
@@ -94,100 +79,73 @@ class PlayersController:
             print(f"❌ Erreur lors du calcul des statistiques des joueurs : {e}")
             return {}
 
-    def get_players_count_by_country(self) -> dict:
-        """
-        Récupère le nombre de joueurs par pays
-        """
+    async def get_players_count_by_country(self) -> dict:
         try:
             pipeline = [
                 {"$group": {"_id": "$pays", "count": {"$sum": 1}}},
                 {"$sort": {"count": -1}},
-                {"$limit": 20}  # Top 20 pays
+                {"$limit": 20}
             ]
-            
-            result = list(self.collection.aggregate(pipeline))
+            cursor = self.collection.aggregate(pipeline)
+            result = await cursor.to_list(length=None)
             return {item["_id"]: item["count"] for item in result if item["_id"]}
         except Exception as e:
             print(f"❌ Erreur lors du comptage des joueurs par pays : {e}")
             return {}
 
-    def get_players_count_by_level(self) -> dict:
-        """
-        Récupère le nombre de joueurs par niveau
-        """
+    async def get_players_count_by_level(self) -> dict:
         try:
             pipeline = [
                 {"$group": {"_id": "$level", "count": {"$sum": 1}}},
                 {"$sort": {"_id": 1}}
             ]
-            
-            result = list(self.collection.aggregate(pipeline))
+            cursor = self.collection.aggregate(pipeline)
+            result = await cursor.to_list(length=None)
             return {item["_id"]: item["count"] for item in result if item["_id"]}
         except Exception as e:
             print(f"❌ Erreur lors du comptage des joueurs par niveau : {e}")
             return {}
 
-    def get_players_by_country(self, country: str, limit: int = 100) -> List[Player]:
-        """
-        Récupère les joueurs d'un pays donné
-        """
+    async def get_players_by_country(self, country: str, limit: int = 100) -> List[Player]:
         try:
-            players_data = list(self.collection.find(
-                {"pays": country}, 
-                {"_id": 0}
-            ).limit(limit).sort("trophies", -1))
-            
-            players = [Player(**player) for player in players_data]
-            return players
+            cursor = self.collection.find(
+                {"pays": country}, {"_id": 0}
+            ).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la récupération des joueurs de '{country}' : {e}")
             return []
 
-    def get_players_by_clan(self, clan: str, limit: int = 100) -> List[Player]:
-        """
-        Récupère les joueurs d'un clan donné
-        """
+    async def get_players_by_clan(self, clan: str, limit: int = 100) -> List[Player]:
         try:
-            players_data = list(self.collection.find(
-                {"clan": clan}, 
-                {"_id": 0}
-            ).limit(limit).sort("trophies", -1))
-            
-            players = [Player(**player) for player in players_data]
-            return players
+            cursor = self.collection.find(
+                {"clan": clan}, {"_id": 0}
+            ).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la récupération des joueurs du clan '{clan}' : {e}")
             return []
 
-    def get_players_by_level(self, level: int, limit: int = 100) -> List[Player]:
-        """
-        Récupère les joueurs d'un niveau donné
-        """
+    async def get_players_by_level(self, level: int, limit: int = 100) -> List[Player]:
         try:
-            players_data = list(self.collection.find(
-                {"level": level}, 
-                {"_id": 0}
-            ).limit(limit).sort("trophies", -1))
-            
-            players = [Player(**player) for player in players_data]
-            return players
+            cursor = self.collection.find(
+                {"level": level}, {"_id": 0}
+            ).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la récupération des joueurs de niveau {level} : {e}")
             return []
 
-    def get_players_by_trophy_range(self, min_trophies: int, max_trophies: int, limit: int = 100) -> List[Player]:
-        """
-        Récupère les joueurs dans une plage de trophées
-        """
+    async def get_players_by_trophy_range(self, min_trophies: int, max_trophies: int, limit: int = 100) -> List[Player]:
         try:
-            players_data = list(self.collection.find(
-                {"trophies": {"$gte": min_trophies, "$lte": max_trophies}}, 
-                {"_id": 0}
-            ).limit(limit).sort("trophies", -1))
-            
-            players = [Player(**player) for player in players_data]
-            return players
+            cursor = self.collection.find(
+                {"trophies": {"$gte": min_trophies, "$lte": max_trophies}}, {"_id": 0}
+            ).limit(limit).sort("trophies", -1)
+            players_data = await cursor.to_list(length=None)
+            return [Player(**player) for player in players_data]
         except Exception as e:
             print(f"❌ Erreur lors de la récupération des joueurs entre {min_trophies} et {max_trophies} trophées : {e}")
             return []
-
